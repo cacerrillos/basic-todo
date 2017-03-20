@@ -1,0 +1,122 @@
+<!--
+A comment describing this element
+
+Example:
+
+    <my-elem></my-elem>
+
+Example:
+
+    <my-elem>
+      <h2>Hello my-elem</h2>
+    </my-elem>
+
+@demo demo/index.html
+-->
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="../bower_components/iron-list/iron-list.html">
+<link rel="import" href="../bower_components/paper-checkbox/paper-checkbox.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/iron-ajax/iron-ajax.html">
+<link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../bower_components/iron-icons/iron-icons.html">
+<dom-module id="todo-item">
+  <template>
+    <style>
+      :host {
+        display: block;
+      }
+      .item {
+        margin-top: auto;
+        margin-bottom: auto;
+      }
+      .row {
+        margin-top: 10px;
+        margin-bottom: 10px;
+      }
+    </style>
+    <style include="iron-flex iron-flex-alignment iron-flex-factors"></style>
+    <!-- deleteAjax -->
+    <iron-ajax
+    id="deleteAjax"
+       url="/api/1.0/delete"
+       handle-as="json"
+       method="POST"
+       content-type="application/json"
+       on-response="reload"></iron-ajax>
+    <iron-ajax
+    auto
+    id="fetchAjax"
+    url="/api/1.0/fetch"
+    handle-as="json"
+    last-response="{{data}}"></iron-ajax>
+    <iron-ajax
+      id="updateAjax"
+       url="/api/1.0/update"
+       method="POST"
+       handle-as="json"
+       content-type="application/json"
+       on-request="handleRequest"
+       on-response="reload"></iron-ajax>
+    <template is="dom-repeat" items="[[_filter(data)]]" as="item">
+      <div class="layout horizontal row">
+        <div class="item"><paper-checkbox checked="{{item.done}}" on-change="_onCheckedChange"></paper-checkbox></div>
+        <div class="item"><paper-icon-button icon="icons:delete" on-tap="_doDelete"></paper-icon-button></div>
+        <div class="item flex">[[item.text]]</div>
+      </div>
+    </template>
+  </template>
+  <script>
+    Polymer({
+      is: 'todo-item',
+      properties: {
+        data: {
+          type: Array
+        }
+      },
+      handleRequest: function(e) {
+        console.log(e);
+        this.reload();
+      },
+      handleResponse: function(e) {
+        if(e.detail.response) {
+          //do toast
+          if(e.detail.response.status) {
+
+          } else {
+
+          }
+        }
+        console.log(e);
+      },
+      _onCheckedChange: function(e) {
+        var id = e.model.get('item.text');
+        var checked = e.model.get('item.done');
+        var item = e.model.get('item');
+        this.$.updateAjax.body = JSON.stringify(item);
+        this.$.updateAjax.generateRequest();
+        console.log(item);
+      },
+      reload: function() {
+        this.$.fetchAjax.generateRequest();
+      },
+      _printData: function() {
+        console.log(this.data);
+      },
+      _filter: function(e) {
+        var arr = JSON.parse(JSON.stringify(e));
+        for(var k in arr) {
+          if(!arr[k].hasOwnProperty) continue;
+          if(arr[k].hidden == 1) delete arr[k];
+        }
+        return arr.filter(function(){ return true; });
+      },
+      _doDelete: function(e) {
+        var item = e.model.get('item');
+        this.$.deleteAjax.body = JSON.stringify(item);
+        this.$.deleteAjax.generateRequest();
+      }
+    });
+  </script>
+</dom-module>
